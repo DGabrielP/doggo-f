@@ -2,7 +2,7 @@ import React from 'react';
 import { TextInput as RNTextInput, StyleSheet, TextInputProps } from 'react-native';
 import Colors from './Colors';
 
-const TextInput: React.FC<TextInputProps> = (props) => {
+const TextInputDefine: React.FC<TextInputProps> = (props) => {
   return (
     <RNTextInput
       style={styles.input}
@@ -27,4 +27,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TextInput;
+export default TextInputDefine;

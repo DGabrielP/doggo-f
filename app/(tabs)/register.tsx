@@ -7,7 +7,7 @@ import Logo from '@/components/ui/Logo';
 import TextInputDefine from '@/components/ui/TextInputDefine';
 import ButtonTemplate from '@/components/ui/ButtonTemplate';
 import { useRouter } from 'expo-router';
-import { register } from '@/config/auth';
+import { register } from '@/services/auth';
 
 
 const RegisterScreen = () => {

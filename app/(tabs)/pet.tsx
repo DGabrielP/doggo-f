@@ -1,86 +1,108 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, FlatList, Alert } from 'react-native';
-import { fetchPets } from '@/config/pet'; // Asegúrate de que la ruta sea correcta
-import { router } from 'expo-router';
-import ButtonTemplate from '@/components/ui/ButtonTemplate'; // Importa el componente ButtonTemplate
-import Colors from '@/components/ui/Colors';
-import TypoText from '@/components/ui/TypoText';
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import Header from "@/components/Header";
+import Colors from "@/components/ui/Colors";
+import TypoText from "@/components/ui/TypoText";
+import { router } from "expo-router";
+import { useUserStore } from "@/store/UserStore";
+import { usePetStore } from "@/store/PetStore"; // Almacena mascota seleccionada
+import api from "@/services/api";
 
-// Definir la interfaz Pet
+// Definir la interfaz de Pet
 interface Pet {
   id: number;
   name: string;
-  ownerName: string; 
+  ownerdName: string;
 }
 
-const PetListScreen = () => {
-  const [pets, setPets] = useState<Pet[]>([]); // Especifica que pets es un array de Pet
-  const [loading, setLoading] = useState(true);
+const PetScreen = () => {
+  const { userId, token } = useUserStore(); // Obtener usuario autenticado
+  const { setPet } = usePetStore(); // Guardar mascota seleccionada
+  const [pets, setPets] = useState<Pet[]>([]); // Estado tipado correctamente
 
-  // Función para cargar las mascotas
-  const loadPets = async () => {
+  // Función para obtener las mascotas del usuario
+  const fetchPets = async () => {
     try {
-      const petsData = await fetchPets(); // Obtiene las mascotas desde la API
-      setPets(petsData); // Guarda las mascotas
-      setLoading(false);
+      const response = await api.get(`/pets?userId=${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPets(response.data);
     } catch (error) {
-      setLoading(false);
-      Alert.alert('Error', 'No se pudo cargar la lista de mascotas');
+      console.error("Error fetching pets:", error);
     }
   };
 
+  // Cargar mascotas al montar la pantalla
   useEffect(() => {
-    loadPets(); // Carga las mascotas cuando el componente se monta
-  }, []);
-
-  // Función para renderizar cada mascota
-  const renderItem = ({ item }: { item: Pet }) => (
-    <View style={styles.petItem}>
-      <Text style={TypoText.label}>{item.name}</Text> {/* Nombre de la mascota */}
-      <Text>Dueño: {item.ownerName}</Text> {/* Nombre del dueño */}
-    </View>
-  );
+    if (userId && token) {
+      fetchPets();
+    }
+  }, [userId, token]);
 
   return (
     <View style={styles.container}>
-      <Text style={TypoText.title}>Lista de Mascotas</Text>
-      
-      {loading ? (
-        <Text>Cargando...</Text>
-      ) : (
-        <FlatList
-          data={pets}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()} // Asegúrate de que cada mascota tenga un id único
-        />
-      )}
+      <Header title="Mascotas" />
 
-      {/* Botones fuera del View con la lista de mascotas */}
-      <View style={styles.buttonContainer}>
-        <ButtonTemplate title="Añadir Mascota" onPress={() => router.push('./newPet')} />
-        <ButtonTemplate title="Ver Monitoreo" onPress={() => router.push('./monitor')} />
-      </View>
+      <FlatList
+        data={pets}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.petCard}>
+            <Text style={TypoText.label}>{item.name}</Text>
+            <Text style={TypoText.body}>Dueño: {item.ownerdName}</Text>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => {
+                setPet(item.id, item.name); // Guardar mascota seleccionada
+                router.push("/monitor"); // Ir a monitor
+              }}
+            >
+              <Text style={TypoText.label}>Ver</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => router.push("/newPet")}
+      >
+        <Text style={TypoText.label}>Añadir Mascota</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
+// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.primary,
-    padding: 20,
-  },
-  petItem: {
-    backgroundColor: '#fff',
+    alignItems: "center",
     padding: 10,
-    marginBottom: 10,
-    borderRadius: 8,
   },
-  buttonContainer: {
+  petCard: {
+    width: "90%",
+    backgroundColor: Colors.secondary,
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  button: {
+    marginTop: 10,
+    backgroundColor: Colors.secondary,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  addButton: {
     marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    backgroundColor: Colors.secondary,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
   },
 });
 
-export default PetListScreen;
+export default PetScreen;

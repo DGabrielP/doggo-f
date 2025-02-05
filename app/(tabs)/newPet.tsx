@@ -7,7 +7,7 @@ import Logo from '@/components/ui/Logo';
 import TextInputDefine from '@/components/ui/TextInputDefine';
 import ButtonTemplate from '@/components/ui/ButtonTemplate';
 import { useRouter } from 'expo-router';
-import { createPet } from '@/config/createPet'; // Función que manejará la creación de la mascota en la API
+import { createPet } from '@/services/createPet'; // Función que manejará la creación de la mascota en la API
 
 const NewPetScreen = () => {
   const router = useRouter();
